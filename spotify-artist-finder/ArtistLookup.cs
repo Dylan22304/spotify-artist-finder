@@ -9,27 +9,25 @@ namespace spotify_artist_finder
         //query used for searching through the database to find artists
         private Query q;
 
-        //list of the members of a band if the user is searching for a band rather than an individual
-        private IArtist[] band_members;
+        //related artists to the artist being searched for, with keys represented by relationship type and values as the artists profile
+        private Dictionary<string, List<IArtist>> related_artists;
 
-        //constructor for creating an object which can search for an artist in the database, and return the nam
+        //constructor for creating an object which can search for an artist in the database, and return lists of related artists
         public ArtistLookup()
         {
             //setup the query search using information to authenticate
             q = new Query("spotify-easy-search", "1.0", "https://github.com/Dylan22304");
 
-            //temp size which will be reset later when the number of band members is known
-            band_members = new IArtist[1];
+            //key is the relationship type, value is a list of artists with that relationship type
+            related_artists = new Dictionary<string, List<IArtist>>();
         }
 
         /*
-         function to return an array of artists directly related the artist which the user is searching for
-         for bands, this means finding works created by other members of the band
-         for solo artists, this means finding side projects by the same artists
+         function to return a dictionary with related artists
 
          param "search_query" is the name of the artist which is searching for
          */
-        public IArtist[] FindRelatedArtists(string search_query)
+        public Dictionary<string, List<IArtist>> FindRelatedArtists(string search_query)
         {
             if (search_query == null)
             {
@@ -53,42 +51,34 @@ namespace spotify_artist_finder
                 throw new Exception("THIS ARTIST DOES NOT HAVE A VALID ENTRY IN THE DATABASE");
             }
 
-            //determine whether the user is searching for a group or a solo artist
-            if (artist.Type.Equals("Group"))
+            //get the artists related to the band
+            var artist_relationships = artist.Relationships;
+            if (artist_relationships == null)
             {
-                //get the artists related to the band
-                var artist_relationships = artist.Relationships;
-                if (artist_relationships == null)
-                {
-                    throw new Exception("THIS BAND DOES NOT HAVE VALID MEMBERS LISTED TO SEARCH FOR");
-                }
-                else
-                {
-                    //set the return array to the correct size (will be too large for some bands due to tributes and other relationships)
-                    Array.Resize(ref band_members, artist_relationships.Count);
-
-                    //iterate through each relationship and sort out the band members
-                    int arr_index = 0;
-                    foreach (var relation in artist_relationships)
-                    {
-                        if (relation == null || relation.Artist == null || relation.Type == null) continue;
-
-                        if (relation.Type.Equals("member of band"))
-                        {
-                            //add this member to the array
-                            band_members[arr_index] = relation.Artist;
-                            arr_index++;
-                        }
-                    }
-
-                    //return the list of band members
-                    band_members = band_members.Distinct().ToArray();
-                    return band_members;
-                }
+                throw new Exception("THIS ARTIST HAS NO RELATIONSHIPS LISTED IN THE DATABASE");
             }
             else
             {
-                throw new Exception("SOLO ARTISTS ARE NOT SETUP YET");
+                //iterate through each relationship
+                foreach (var relation in artist_relationships)
+                {
+                    if (relation == null || relation.Artist == null || relation.Type == null || (relation.Artist.GetType().Equals(typeof(IArtist)) || relation.Artist.GetType().Equals(typeof(ILabel)))) continue;
+
+                    //check if that relation type already exists
+                    if (!related_artists.TryGetValue(relation.Type, out List<IArtist>? returned_list))
+                    {
+                        //add to the dictionary
+                        related_artists.Add(relation.Type, new List<IArtist>());
+                        related_artists[relation.Type].Add(relation.Artist);
+                    }
+                    else
+                    {
+                        returned_list.Add(relation.Artist);
+                    }
+                }
+
+                //return the list of band members
+                return related_artists;
             }
         }
     }
