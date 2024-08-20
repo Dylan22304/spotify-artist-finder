@@ -16,7 +16,7 @@ namespace spotify_artist_finder
         public ArtistLookup()
         {
             //setup the query search using information to authenticate
-            q = new Query("spotify-easy-search", "1.0", "");
+            q = new Query("spotify-easy-search", "1.0", "https://github.com/Dylan22304");
 
             //temp size which will be reset later when the number of band members is known
             band_members = new IArtist[1];
