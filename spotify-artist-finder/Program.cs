@@ -24,8 +24,11 @@ namespace spotify_artist_finder
                 //create a new object for searching
                 ArtistLookup db = new();
 
+                //find the entry in the database for the artist which the user is searching for
+                IArtist original_artist = db.FindArtist(artistName);
+
                 //get related artists to the one the user is searching for
-                Dictionary<string, List<IArtist>> artists = db.FindRelatedArtists(artistName);
+                Dictionary<string, List<IArtist>> artists = db.FindRelatedArtists(original_artist);
 
                 //loop until the user is done
                 while (true)
@@ -43,13 +46,45 @@ namespace spotify_artist_finder
                     //check if user made a valid selection
                     if (artists.TryGetValue(user_selection, out List<IArtist>? returned_list))
                     {
-                        //print artists FOR NOW
-                        Console.WriteLine("\nPRESS ENTER WHEN DONE VIEWING");
-                        foreach (var artist in returned_list)
+                        //loop until the user is done
+                        while (true)
                         {
-                            Console.WriteLine(artist);
+                            //select an artist to view their other music
+                            Console.WriteLine("\nWhose music would you like to explore?");
+                            int index = 1;
+                            foreach (var artist in returned_list)
+                            {
+                                Console.WriteLine($"{index}: {artist}");
+                                index++;
+                            }
+                            user_selection = Console.ReadLine();
+
+                            if (user_selection == "") break;
+
+                            //convert the selection into an integer for the index
+                            int artist_num;
+                            try
+                            {
+                                artist_num = Int32.Parse(user_selection);
+                                Console.WriteLine("HERE");
+                                artist_num--;
+
+                                //check if user made a valid selection
+                                if (artist_num < returned_list.Count && artist_num > 0)
+                                {
+                                    List<IWork> recommended_songs = db.SongsMadeBy(returned_list[artist_num], original_artist);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("HERE AGAIN");
+                                    Console.WriteLine("NOT A VALID NUMBER");
+                                }
+                            }
+                            catch (FormatException e)
+                            {
+                                Console.WriteLine("NOT A VALID NUMBER");
+                            }
                         }
-                        Console.ReadLine();
                     }
                 }
             }

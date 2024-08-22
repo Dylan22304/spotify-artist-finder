@@ -23,11 +23,11 @@ namespace spotify_artist_finder
         }
 
         /*
-         function to return a dictionary with related artists
+         function which returns an entry in the database for an artist which the user is searching for
 
-         param "search_query" is the name of the artist which is searching for
+         param "search_query" is the name of the artist being searched
          */
-        public Dictionary<string, List<IArtist>> FindRelatedArtists(string search_query)
+        public IArtist FindArtist(string search_query)
         {
             if (search_query == null)
             {
@@ -51,6 +51,16 @@ namespace spotify_artist_finder
                 throw new Exception("THIS ARTIST DOES NOT HAVE A VALID ENTRY IN THE DATABASE");
             }
 
+            return artist;
+        }
+
+        /*
+         function to return a dictionary with related artists
+
+         param "artist" is the entry in the database for the artist
+         */
+        public Dictionary<string, List<IArtist>> FindRelatedArtists(IArtist artist)
+        {
             //get the artists related to the band
             var artist_relationships = artist.Relationships;
             if (artist_relationships == null)
@@ -80,6 +90,31 @@ namespace spotify_artist_finder
                 //return the list of band members
                 return related_artists;
             }
+        }
+        
+        /*
+         function returning a list of works made by a specific artist, excluding work made by the original band/person
+
+         param "artist" is the entry in the database for the artist being searched for
+         param "original_artist" is the entry in the database for the artist who the user originally searched for
+         */
+        public List<IWork> SongsMadeBy(IArtist artist, IArtist original_artist)
+        {
+            //search for the current artists works
+            var artist_works = q.BrowseAllWorks(artist, pageSize: 25, offset: 0);
+
+            if (artist_works == null)
+            {
+                throw new Exception("THE SELECTED ARTIST DOES NOT HAVE ANY WORKS");
+            }
+                
+            //go through each song in the artists works
+            foreach (var song in artist_works)
+            {
+                Console.WriteLine(song);
+            }
+
+            return new List<IWork>();
         }
     }
 }
