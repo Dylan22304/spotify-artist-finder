@@ -98,23 +98,25 @@ namespace spotify_artist_finder
          param "artist" is the entry in the database for the artist being searched for
          param "original_artist" is the entry in the database for the artist who the user originally searched for
          */
-        public List<IWork> SongsMadeBy(IArtist artist, IArtist original_artist)
+        public List<String> SongsMadeBy(IArtist artist)
         {
             //search for the current artists works
-            var artist_works = q.BrowseAllWorks(artist, pageSize: 25, offset: 0);
+            var artist_works = q.BrowseAllWorks(artist, pageSize: 100, offset: 0);
 
             if (artist_works == null)
             {
                 throw new Exception("THE SELECTED ARTIST DOES NOT HAVE ANY WORKS");
             }
-                
-            //go through each song in the artists works
+
+            //convert to a list of strings for sorting
+            List<String> related_songs = new List<String>();
             foreach (var song in artist_works)
             {
-                Console.WriteLine(song);
+                related_songs.Add(song.Title);
             }
+            related_songs.Sort();
 
-            return new List<IWork>();
+            return related_songs;
         }
     }
 }

@@ -17,14 +17,10 @@ namespace spotify_artist_finder
 
                 //store the artists name
                 string artistName = Console.ReadLine();
-
-                //check for quitting
                 if (artistName == "") break;
 
-                //create a new object for searching
-                ArtistLookup db = new();
-
                 //find the entry in the database for the artist which the user is searching for
+                ArtistLookup db = new();
                 IArtist original_artist = db.FindArtist(artistName);
 
                 //get related artists to the one the user is searching for
@@ -66,21 +62,25 @@ namespace spotify_artist_finder
                             try
                             {
                                 artist_num = Int32.Parse(user_selection);
-                                Console.WriteLine("HERE");
                                 artist_num--;
 
                                 //check if user made a valid selection
                                 if (artist_num < returned_list.Count && artist_num > 0)
                                 {
-                                    List<IWork> recommended_songs = db.SongsMadeBy(returned_list[artist_num], original_artist);
+                                    //get the list of songs made by that artist
+                                    List<String> recommended_songs = db.SongsMadeBy(returned_list[artist_num]);
+                                    Console.WriteLine();
+                                    foreach (var song in recommended_songs)
+                                    {
+                                        Console.WriteLine(song);
+                                    }
                                 }
                                 else
                                 {
-                                    Console.WriteLine("HERE AGAIN");
                                     Console.WriteLine("NOT A VALID NUMBER");
                                 }
                             }
-                            catch (FormatException e)
+                            catch (FormatException)
                             {
                                 Console.WriteLine("NOT A VALID NUMBER");
                             }
